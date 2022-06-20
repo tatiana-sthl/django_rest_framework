@@ -1,5 +1,5 @@
 from unicodedata import category
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
@@ -7,6 +7,22 @@ from rest_framework.decorators import action
 from shop.models import Category, Product, Article
 from shop.serializers import CategoryDetailSerializer, CategoryListSerializer, ProductDetailSerializer, ProductListSerializer, ArticleSerializer
  
+class MultipleSerializerMixin:
+
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve' and self.detail_serializer_class is not None:
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
+
+class AdminCategoryViewset(MultipleSerializerMixin, ModelViewSet):
+    serializer_class =  CategoryListSerializer
+    detail_serializer_class = CategoryDetailSerializer
+    queryset = Category.objects.all()
+
+
 class CategoryViewset(ReadOnlyModelViewSet):
 
     serializer_class = CategoryListSerializer
@@ -24,6 +40,7 @@ class CategoryViewset(ReadOnlyModelViewSet):
     def disable(self, request, pk):
         self.get_object().disable()
         return Response()
+
 
 class ProductViewset(ReadOnlyModelViewSet):
 
@@ -47,6 +64,11 @@ class ProductViewset(ReadOnlyModelViewSet):
         self.get_object().disable()
         return Response()
 
+
+class AdminArticleViewset(ModelViewSet):
+    serializer_class =  ArticleSerializer
+    queryset = Article.objects.all()
+    
 
 class ArticleViewset(ReadOnlyModelViewSet):
 
